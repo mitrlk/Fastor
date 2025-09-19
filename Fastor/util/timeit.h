@@ -103,6 +103,7 @@ inline uint64_t rdtsc_end() {
 //  Linux/GCC
 #else
 inline uint64_t rdtsc() {
+#if defined(__x86_64__) || defined(__i386__)
     unsigned int lo, hi;
     // This does not clobber the register so rdtsc overwrites
     // the register, see
@@ -123,6 +124,11 @@ inline uint64_t rdtsc() {
                      );
 #endif
     return ((uint64_t)hi << 32) | lo;
+#else
+    // ARM or other architectures - use system clock
+    auto now = std::chrono::high_resolution_clock::now();
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+#endif
 }
 
 #ifndef FASTOR_SIMPLE_RDTSC
@@ -134,6 +140,7 @@ inline uint64_t rdtsc() {
 // multiple times within a loop
 // https://intel.ly/3dXFfQN
 inline uint64_t rdtsc_begin() {
+#if defined(__x86_64__) || defined(__i386__)
     unsigned int lo, hi;
     __asm__ __volatile__ ("CPUID\n\t"
                          "RDTSC\n\t"
@@ -142,9 +149,15 @@ inline uint64_t rdtsc_begin() {
                          "%rax", "%rbx", "%rcx", "%rdx" // clobber memory
                          );
     return ((uint64_t)hi << 32) | lo;
+#else
+    // ARM or other architectures - use system clock
+    auto now = std::chrono::high_resolution_clock::now();
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+#endif
 }
 // and then a call to cpuid immediately after rdtsc
 inline uint64_t rdtsc_end() {
+#if defined(__x86_64__) || defined(__i386__)
     unsigned int lo, hi;
     __asm__ __volatile__("RDTSCP\n\t"
                          "mov %%edx, %0\n\t"
@@ -153,6 +166,11 @@ inline uint64_t rdtsc_end() {
                         "%rax", "%rbx", "%rcx", "%rdx" // clobber memory
                         );
     return ((uint64_t)hi << 32) | lo;
+#else
+    // ARM or other architectures - use system clock
+    auto now = std::chrono::high_resolution_clock::now();
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+#endif
 }
 #else
 inline uint64_t rdtsc_begin() { return rdtsc();}

@@ -85,7 +85,7 @@ void _matmul(const T * FASTOR_RESTRICT a, const T * FASTOR_RESTRICT b, T * FASTO
 }
 #else
 template<typename T, size_t M, size_t K, size_t N,
-         typename std::enable_if<M!=K && M==N && M==2,bool>::type = 0>
+         typename std::enable_if<M!=K && M==N && M==2 && (is_same_v_<T,float> || is_same_v_<T,double>),bool>::type = 0>
 void _matmul(const T * FASTOR_RESTRICT a, const T * FASTOR_RESTRICT b, T * FASTOR_RESTRICT out) {
     internal::_matmul_base<T,M,K,N>(a,b,out);
 }

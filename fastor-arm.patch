@@ -1,0 +1,28 @@
+--- a/Fastor/config/cpuid.h
++++ b/Fastor/config/cpuid.h
+@@
+-    __asm__ __volatile__("cpuid" : "=a"(regs[0]), "=b"(regs[1]), "=c"(regs[2]), "=d"(regs[3])
+-                         : "a"(id), "c"(sub_id));
++#if defined(__aarch64__) || defined(__arm__)
++    /* Apple-silicon (or any Arm) – no CPUID.  Return zeros so the API exists. */
++    regs[0]=regs[1]=regs[2]=regs[3]=0;
++#else
++    __asm__ __volatile__("cpuid" : "=a"(regs[0]), "=b"(regs[1]), "=c"(regs[2]), "=d"(regs[3])
++                         : "a"(id), "c"(sub_id));
++#endif
+--- a/Fastor/util/timeit.h
++++ b/Fastor/util/timeit.h
+@@
+-inline uint64_t rdtsc() { unsigned lo,hi; __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi)); return ((uint64_t)hi<<32)|lo; }
+-inline uint64_t rdtsc_begin() { return rdtsc(); }
+-inline uint64_t rdtsc_end()   { return rdtsc(); }
++#if defined(__aarch64__) || defined(__arm__)
++#  include <chrono>
++inline uint64_t rdtsc()       { return 0; }
++inline uint64_t rdtsc_begin() { return std::chrono::steady_clock::now().time_since_epoch().count(); }
++inline uint64_t rdtsc_end()   { return std::chrono::steady_clock::now().time_since_epoch().count(); }
++#else
++inline uint64_t rdtsc() { unsigned lo,hi; __asm__ __volatile__("rdtsc" : "=a"(lo), "=d"(hi)); return ((uint64_t)hi<<32)|lo; }
++inline uint64_t rdtsc_begin() { return rdtsc(); }
++inline uint64_t rdtsc_end()   { return rdtsc(); }
++#endif

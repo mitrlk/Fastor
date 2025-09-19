@@ -42,12 +42,17 @@ public:
   explicit CPUID(unsigned i) {
 #ifdef _WIN32
     __cpuid((int *)regs, (int)i);
-
-#else
+#elif defined(__x86_64__) || defined(__i386__)
     asm volatile
       ("cpuid" : "=a" (regs[0]), "=b" (regs[1]), "=c" (regs[2]), "=d" (regs[3])
        : "a" (i), "c" (0));
     // ECX is set to zero for CPUID function 4
+#else
+    // ARM or other architectures - set dummy values
+    regs[0] = 0;
+    regs[1] = 0;
+    regs[2] = 0;
+    regs[3] = 0;
 #endif
   }
 

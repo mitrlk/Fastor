@@ -1,0 +1,10 @@
+prefix=/Users/mitrlk/miniforge3
+exec_prefix=${prefix}
+includedir=${prefix}/include
+
+Name: Fastor
+Description: A light-weight high performance tensor algebra framework for modern C++
+URL: https://github.com/romeric/Fastor
+Version: 0.6.4
+Cflags: -I${includedir}
+
