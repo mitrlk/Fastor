@@ -1,28 +1,60 @@
 #ifndef TENSOR_POST_META_H
 #define TENSOR_POST_META_H
 
+#include "Fastor/meta/meta.h"
 #include "Fastor/tensor/Tensor.h"
 #include "Fastor/tensor_algebra/indicial.h"
 
 namespace Fastor {
 
-
-/* Classify/specialise Tensor<primitive> as primitive if needed.
-  This specialisation hurts the performance of some specialised
-  kernels like matmul/norm/LU/inv that unroll aggressively unless
-  Tensor<T> is specialised to wrap T only
-*/
+/* Is an expression a abstract tensor */
 //--------------------------------------------------------------------------------------------------------------------//
-// template<typename T>
-// struct is_primitive<Tensor<T>> {
-//     static constexpr bool value = is_primitive_v_<T> ? true : false;
-// };
+template<class T>
+struct is_abstracttensor {
+    static constexpr bool value = false;
+};
+template<class T, size_t DIMS>
+struct is_abstracttensor<AbstractTensor<T,DIMS>> {
+    static constexpr bool value = true;
+};
+template<typename T>
+constexpr bool is_abstracttensor_v = is_abstracttensor<T>::value;
+//--------------------------------------------------------------------------------------------------------------------//
+
+
+/* Is an expression a tensor */
+//--------------------------------------------------------------------------------------------------------------------//
+template<class T>
+struct is_tensor {
+    static constexpr bool value = false;
+};
+template<class T, size_t ...Rest>
+struct is_tensor<Tensor<T,Rest...>> {
+    static constexpr bool value = true;
+};
+template<typename T>
+constexpr bool is_tensor_v = is_tensor<T>::value;
+//--------------------------------------------------------------------------------------------------------------------//
+
+
+/* Is an expression a tensormap */
+//--------------------------------------------------------------------------------------------------------------------//
+template<class T>
+struct is_tensormap {
+    static constexpr bool value = false;
+};
+template<class T, size_t ...Rest>
+struct is_tensormap<TensorMap<T,Rest...>> {
+    static constexpr bool value = true;
+};
+template<typename T>
+constexpr bool is_tensormap_v = is_tensormap<T>::value;
 //--------------------------------------------------------------------------------------------------------------------//
 
 
 /* Find the underlying scalar type of an expression */
 //--------------------------------------------------------------------------------------------------------------------//
-template<class T>
+template<class T, typename Enable = void>
 struct scalar_type_finder {
     using type = T;
 };
@@ -46,8 +78,12 @@ struct scalar_type_finder<TensorMap<T,N>> {
     using type = T;
 };
 
-template<template <class,size_t> class UnaryExpr, typename Expr, size_t DIMS>
-struct scalar_type_finder<UnaryExpr<Expr,DIMS>> {
+// template<template<typename,size_t> class UnaryExpr, typename Expr, size_t DIM>
+// struct scalar_type_finder<UnaryExpr<Expr,DIM>> {
+//     using type = typename scalar_type_finder<Expr>::type;
+// };
+template<template<class, size_t> class UnaryExpr, typename Expr, size_t DIMS>
+struct scalar_type_finder<UnaryExpr<Expr, DIMS>, enable_if_t_<!is_tensor_v<UnaryExpr<Expr, DIMS>> && !is_tensormap_v<UnaryExpr<Expr, DIMS>> >> {
     using type = typename scalar_type_finder<Expr>::type;
 };
 template<template <class,class,size_t> class Expr, typename TLhs, typename TRhs, size_t DIMS>
@@ -73,9 +109,9 @@ struct scalar_type_finder<TensorFixedViewExprnD<TensorType<T,Rest...>,Fseqs...>>
 
 /* Find the underlying tensor type of an expression */
 //--------------------------------------------------------------------------------------------------------------------//
-template<class X>
+template<class T, typename Enable = void>
 struct tensor_type_finder {
-    using type = Tensor<X>;
+    using type = Tensor<T>;
 };
 
 template<typename T, size_t ... Rest>
@@ -97,8 +133,12 @@ struct tensor_type_finder<TensorMap<T,N>> {
     using type = Tensor<T,N>;
 };
 
-template<template<typename,size_t> class UnaryExpr, typename Expr, size_t DIM>
-struct tensor_type_finder<UnaryExpr<Expr,DIM>> {
+// template<template<typename,size_t> class UnaryExpr, typename Expr, size_t DIM>
+// struct tensor_type_finder<UnaryExpr<Expr,DIM>> {
+//     using type = typename tensor_type_finder<Expr>::type;
+// };
+template<template<class, size_t> class UnaryExpr, typename Expr, size_t DIMS>
+struct tensor_type_finder<UnaryExpr<Expr, DIMS>, enable_if_t_<!is_tensor_v<UnaryExpr<Expr, DIMS>> && !is_tensormap_v<UnaryExpr<Expr, DIMS>> >> {
     using type = typename tensor_type_finder<Expr>::type;
 };
 template<template<class,class,size_t> class BinaryExpr, typename TLhs, typename TRhs, size_t DIMS>
@@ -119,36 +159,6 @@ template<template<typename,size_t...> class TensorType, typename T, size_t ...Re
 struct tensor_type_finder<TensorFixedViewExprnD<TensorType<T,Rest...>,Fseqs...>> {
     using type = TensorType<T,Rest...>;
 };
-//--------------------------------------------------------------------------------------------------------------------//
-
-
-/* Is an expression a tensor */
-//--------------------------------------------------------------------------------------------------------------------//
-template<class T>
-struct is_tensor {
-    static constexpr bool value = false;
-};
-template<class T, size_t ...Rest>
-struct is_tensor<Tensor<T,Rest...>> {
-    static constexpr bool value = true;
-};
-template<typename T>
-constexpr bool is_tensor_v = is_tensor<T>::value;
-//--------------------------------------------------------------------------------------------------------------------//
-
-
-/* Is an expression a abstract tensor */
-//--------------------------------------------------------------------------------------------------------------------//
-template<class T>
-struct is_abstracttensor {
-    static constexpr bool value = false;
-};
-template<class T, size_t DIMS>
-struct is_abstracttensor<AbstractTensor<T,DIMS>> {
-    static constexpr bool value = true;
-};
-template<typename T>
-constexpr bool is_abstracttensor_v = is_abstracttensor<T>::value;
 //--------------------------------------------------------------------------------------------------------------------//
 
 

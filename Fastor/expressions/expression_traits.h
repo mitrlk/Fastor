@@ -315,12 +315,6 @@ template<class Derived>
 using binary_op_simd_vector_t = typename binary_op_simd_vector_type<Derived>::type;
 //------------------------------------------------------------------------------------------------//
 
-
-
-
-template<class T>
-struct scalar_type_finder;
-
 } // end of namespace Fastor
 
 

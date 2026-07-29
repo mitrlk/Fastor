@@ -254,7 +254,7 @@ operator-(U a, const SIMDVector<std::complex<T>,simd_abi::scalar> &b) {
 template <typename T>
 FASTOR_INLINE SIMDVector<std::complex<T>,simd_abi::scalar>
 operator-(const SIMDVector<std::complex<T>,simd_abi::scalar> &b) {
-    return SIMDVector<std::complex<T>,simd_abi::scalar>(0,0) - b;
+    return SIMDVector<std::complex<T>,simd_abi::scalar>(T(0), T(0)) - b;
 }
 
 template <typename T>

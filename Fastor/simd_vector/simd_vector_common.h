@@ -223,12 +223,18 @@ FASTOR_INLINE void vector_setter(SIMDVector<T,ABI> &vec, const T *data, int idx,
             data[idx+general_stride],data[idx]);
 }
 
-// // 16 word scalar
-// template<typename T, int ABI,
-//          typename std::enable_if<sizeof(T)==16 && internal::get_simd_vector_size<SIMDVector<T,ABI>>::bitsize==64,bool>::type=0>
-// FASTOR_INLINE void vector_setter(SIMDVector<T,ABI> &vec, const T *data, int idx, int general_stride) {
-//     vec.set(data[idx]);
-// }
+// 16 word scalar (for complex types)
+template<typename T, typename ABI>
+FASTOR_INLINE typename std::enable_if<sizeof(T)==16 && std::is_same<ABI,simd_abi::scalar>::value,void>::type
+vector_setter(SIMDVector<T,ABI> &vec, const T *data, int idx, int general_stride) {
+    vec.set(data[idx]);
+}
+// 16 word scalar array version (for complex types)
+template<typename T, typename ABI>
+FASTOR_INLINE typename std::enable_if<sizeof(T)==16 && std::is_same<ABI,simd_abi::scalar>::value,void>::type
+vector_setter(SIMDVector<T,ABI> &vec, const T *data, const std::array<int,1> &a) {
+    vec.set(data[a[0]]);
+}
 // 16 word scalar/SSE
 template<typename T, typename ABI,
          typename std::enable_if<sizeof(T)==16 && internal::get_simd_vector_size<SIMDVector<T,ABI>>::bitsize==128,bool>::type=0>
