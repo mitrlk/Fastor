@@ -2,6 +2,7 @@
 #define SIMD_VECTOR_T_SCALAR_H
 
 #include "Fastor/simd_vector/simd_vector_base.h"
+#include <type_traits>
 
 namespace Fastor {
 
@@ -10,6 +11,7 @@ struct SIMDVector<T, simd_abi::scalar> {
     using value_type = T;
     using scalar_value_type = T;
     using abi_type = simd_abi::scalar;
+    using storage_type = std::remove_const_t<T>;
     static constexpr FASTOR_INDEX Size = 1;
     static constexpr FASTOR_INLINE FASTOR_INDEX size() {return 1;}
 
@@ -23,10 +25,10 @@ struct SIMDVector<T, simd_abi::scalar> {
     }
 
     FASTOR_INLINE void load(const T *data, bool Aligned=true)  { value   = *data; unused(Aligned); }
-    FASTOR_INLINE void store(T *data, bool Aligned=true) const { data[0] = value; unused(Aligned); }
+    FASTOR_INLINE void store(std::remove_const_t<T> *data, bool Aligned=true) const { data[0] = value; unused(Aligned); }
 
     FASTOR_INLINE void aligned_load(const T *data)  { value   = *data; }
-    FASTOR_INLINE void aligned_store(T *data) const { data[0] = value; }
+    FASTOR_INLINE void aligned_store(std::remove_const_t<T> *data) const { data[0] = value; }
 
     FASTOR_INLINE void mask_load(const scalar_value_type *a, uint8_t mask, bool ) {
         if (mask != 0x0) value = *a;
@@ -95,7 +97,7 @@ struct SIMDVector<T, simd_abi::scalar> {
         return value*other.value;
     }
 
-    T value;
+    storage_type value;
 };
 
 template <typename T>
